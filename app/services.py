@@ -1,27 +1,24 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy.orm import Session
 from .models import WeatherData
 from .database import get_db
 
 
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/meteoswiss"
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 def fetch_weather(lat: float, lon: float):
-    end = datetime.utcnow()
-    start = end - timedelta(days=2)
     params = {
         "latitude": lat,
         "longitude": lon,
         "hourly": "temperature_2m,relative_humidity_2m",
-        "start": start.strftime("%Y-%m-%dT%H:%M"),
-        "end": end.strftime("%Y-%m-%dT%H:%M")
+        "forecast_days": 3
     }
     response = requests.get(OPEN_METEO_URL, params=params)
     response.raise_for_status()
     return response.json()
 
-def save_to_db(db: Session, lat: float, lon: float, data: dict):
+def save_to_db(db: Session, data: dict, lat: float, lon: float):
     hourly = data["hourly"]
     timestamps = hourly["time"]
     temps = hourly["temperature_2m"]
